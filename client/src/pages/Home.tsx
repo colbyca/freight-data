@@ -9,6 +9,7 @@ export const Home = () => {
     return (
         <div>
             <h1>Hello World!</h1>
+            <p>Build something cool here</p>
         </div>
     )
 }

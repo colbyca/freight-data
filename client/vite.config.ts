@@ -9,4 +9,9 @@ export default defineConfig({
       input: "src/main.tsx",
     }
   },
+  server: {
+    watch: {
+      usePolling: true,
+    },
+  }
 });
