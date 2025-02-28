@@ -1,5 +1,12 @@
-# CS 3450 Team 3 Freight Data App
+# Freight Stops Visualization and Analysis Software
 This initial setup of this app was taken from <a href="https://github.com/dittonjs/4610Spring25ClassExamples">Joseph Ditton's repo</a>. Thank you Professor Ditton!
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+
+**Features**
+- Handle MB/min of incoming information
+- Prediction of route/delivery times
+- Visualization of routes along a map interface
+- Visualization of statistics relating to individual trips
 
 ## Setting up dev enviroment
 1. Download <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a>
