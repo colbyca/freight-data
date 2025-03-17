@@ -1,0 +1,11 @@
+{
+    "watch": [
+        "app/",
+        "."
+    ],
+    "ext": "py",
+    "exec": "poetry run python -m app",
+    "watchOptions": {
+        "usePolling": true
+    }
+}
