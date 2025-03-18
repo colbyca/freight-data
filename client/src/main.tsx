@@ -3,6 +3,7 @@ import './index.css'
 import App from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { Home } from './pages/Home.tsx'
+import { VisualMap } from './pages/VisualMap.tsx'
 
 const router = createBrowserRouter([
   {
@@ -11,7 +12,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Home />
+        element: <Home />,
+      },
+      {
+        path: '/map',
+        element: <VisualMap />,
       },
     ]
   }

@@ -27,6 +27,33 @@ body {
   height: 100%;
 }
 
+/* Visual Map Css */
+.container {
+  height: 100%;
+}
+
+#super-container {
+  display: grid;
+  grid-template-columns: 80% auto;
+  height: 100%;
+}
+
+.layout-container {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.leaflet-container {
+  flex-grow: 1;
+}
+
+#map-sidebar {
+  flex: 0 1 auto;
+}
+
+/*----------------*/
+
 .messages {
   flex: 1;
   display: flex;
