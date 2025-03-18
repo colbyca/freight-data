@@ -1,8 +1,22 @@
+export enum MapViewType {
+    STOPS = 0
+}
 
-export const MapSidebar: () => JSX.Element = () => {
+
+export interface SidebarProps {
+    selectedMode: MapViewType;
+    setSelectedMode: React.Dispatch<React.SetStateAction<MapViewType>>;
+}
+
+export const MapSidebar = ({selectedMode, setSelectedMode} : SidebarProps) => {
+
     return (
         <div id="map-sidebar">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia alias atque sapiente vel aliquam adipisci debitis rerum numquam totam nihil dolorem voluptate possimus libero exercitationem, quod expedita modi laboriosam architecto?
+            <button type="button"
+                onClick={() => setSelectedMode(MapViewType.STOPS)}
+                data-selected={selectedMode.valueOf() === MapViewType.STOPS}>
+                    Truck Stops
+            </button>
         </div>
     )
 }
