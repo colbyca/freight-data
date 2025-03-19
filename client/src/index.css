@@ -53,11 +53,16 @@ body {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
+  gap: 5px;
+  padding-top: 5px;
 }
 
-#map-sidebar > * {
-  width: 100%;
+#map-sidebar > button {
+  padding: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
+
 
 /*----------------*/
 

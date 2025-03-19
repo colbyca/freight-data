@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react"
 import MarkerModel from "../Models/MarkerModel";
-import { CircleMarker, Marker } from "react-leaflet";
-import { JSX } from "react/jsx-runtime";
+import { CircleMarker } from "react-leaflet";
 
-interface MarkerProps {
+export interface StopMarkerProps {
     markers: MarkerModel[],
 }
 
-export const StopMarkers = ({markers} : MarkerProps) => {
+export const StopMarkers = ({markers} : StopMarkerProps) => {
     return (
         markers!.map(marker => {
             return (

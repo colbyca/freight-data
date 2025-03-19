@@ -1,14 +1,21 @@
 import { MapContainer, TileLayer, useMap } from "react-leaflet"
-import { StopMarkers } from "../components/StopMarkers"
+import { StopMarkerProps, StopMarkers } from "../components/StopMarkers"
 import { JSX } from "react/jsx-runtime";
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
 import { useState } from "react";
-import { Polylines } from "../components/PolyLines";
+import { RouteProps, Routes } from "../components/Routes";
 import MarkerModel from "../Models/MarkerModel";
+
+interface MapInfo {
+    stopMarkerProps: StopMarkerProps;
+    routeProps: RouteProps;
+}
 
 export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.STOPS);
+    // We are likely going to use a useEffect hook to query the api for relevant map information
+    const [mapInfo, setMapInfo] = useState<MapInfo>();
 
     let markers: JSX.Element[] = [];
     
@@ -17,7 +24,7 @@ export const VisualMap = () => {
             markers = StopMarkers({markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]});
             break;
         case MapViewType.ROUTES:
-            markers = Polylines();
+            markers = Routes();
             break;
     }
     
