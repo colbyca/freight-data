@@ -52,7 +52,7 @@ body {
 #map-sidebar {
   flex: 0 1 auto;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 #map-sidebar > * {

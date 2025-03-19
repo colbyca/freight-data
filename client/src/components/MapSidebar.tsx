@@ -1,5 +1,6 @@
 export enum MapViewType {
-    STOPS = 0
+    STOPS = 0,
+    ROUTES = 1,
 }
 
 
@@ -8,15 +9,34 @@ export interface SidebarProps {
     setSelectedMode: React.Dispatch<React.SetStateAction<MapViewType>>;
 }
 
+
+
 export const MapSidebar = ({selectedMode, setSelectedMode} : SidebarProps) => {
 
     return (
         <div id="map-sidebar">
-            <button type="button"
-                onClick={() => setSelectedMode(MapViewType.STOPS)}
-                data-selected={selectedMode.valueOf() === MapViewType.STOPS}>
-                    Truck Stops
-            </button>
+            <SelectModeButton text={"Truck Stops"}
+                              disabled={selectedMode === MapViewType.STOPS}
+                              onclick={() => setSelectedMode(MapViewType.STOPS)} />
+            <SelectModeButton text={"Routes"}
+                              disabled={selectedMode === MapViewType.ROUTES}
+                              onclick={() => setSelectedMode(MapViewType.ROUTES)} />
         </div>
+    )
+}
+
+interface SelectButtonProps {
+    text: String;
+    disabled: boolean;
+    onclick: () => void;
+}
+
+const SelectModeButton = ({text, disabled, onclick} : SelectButtonProps) => {
+    return (
+        <button type="button"
+            onClick={onclick}
+            disabled={disabled}>
+                {text}
+        </button>
     )
 }
