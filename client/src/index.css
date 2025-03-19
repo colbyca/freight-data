@@ -51,6 +51,12 @@ body {
 
 #map-sidebar {
   flex: 0 1 auto;
+  display: flex;
+  flex-direction: row;
+}
+
+#map-sidebar > * {
+  width: 100%;
 }
 
 /*----------------*/
