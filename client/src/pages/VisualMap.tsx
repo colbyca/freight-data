@@ -14,6 +14,7 @@ interface MapInfo {
 
 export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.STOPS);
+    const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     // We are likely going to use a useEffect hook to query the api for relevant map information
     const [mapInfo, setMapInfo] = useState<MapInfo>();
 
@@ -38,7 +39,14 @@ export const VisualMap = () => {
             {markers}
         </MapContainer>
         </div>
-        <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode}/>
+        <div className="sidebar-container" data-hidden={sidebarHidden}>
+            <button type="button"
+                    id="hide-btn"
+                    onClick={() => setSidebarHidden(!sidebarHidden)}>
+                {sidebarHidden ? "<" : ">"}
+            </button>
+            {!sidebarHidden && <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode}/>}
+        </div>
         </div>
     )
 }

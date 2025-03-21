@@ -33,14 +33,15 @@ body {
 }
 
 #super-container {
-  display: grid;
-  grid-template-columns: 80% auto;
+  display: flex;
+  flex-direction: row;
   height: 100%;
 }
 
 .layout-container {
   display: flex;
   flex-flow: column;
+  flex-grow: 1;
   height: 100%;
 }
 
@@ -49,10 +50,15 @@ body {
   align-items: center;
 }
 
+.sidebar-container[data-hidden^="true"] > #map-sidebar {
+  display: none;
+}
+
 #map-sidebar {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
+  width: 200px;
   gap: 5px;
   padding-top: 5px;
 }
@@ -61,6 +67,14 @@ body {
   padding: 10px;
   margin-left: 5px;
   margin-right: 5px;
+  border: 1px solid darkgrey;
+  
+}
+
+#hide-btn {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid darkgrey;
 }
 
 
