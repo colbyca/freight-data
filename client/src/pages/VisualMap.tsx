@@ -6,28 +6,35 @@ import { MapSidebar, MapViewType } from "../components/MapSidebar";
 import { ReactNode, useEffect, useState } from "react";
 import { RouteProps, Routes, Route } from "../components/Routes";
 import MarkerModel from "../Models/MarkerModel";
+import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
 
 interface MapInfo {
-    stopMarkerProps: StopMarkerProps;
-    routeProps: RouteProps;
+    stopMarkerProps?: StopMarkerProps;
+    routeProps?: RouteProps;
+    heatmapProps?: HeatLayerProps;
 }
 
 export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.NONE);
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     // We are likely going to use a useEffect hook to query the api for relevant map information
-    const [mapInfo, setMapInfo] = useState<MapInfo>({stopMarkerProps: {markers: []}, routeProps: {}});
+    const [mapInfo, setMapInfo] = useState<MapInfo>({heatmapProps: {latlngs: []}});
     const [markers, setMarkers] = useState<ReactNode>([]);
 
     useEffect(() => {
         switch (selectedMode.valueOf()) {
             case MapViewType.STOPS:
                 mapInfo.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
-                setMarkers(StopMarkers(mapInfo.stopMarkerProps));
+                setMarkers(StopMarkers(mapInfo.stopMarkerProps))
                 break;
             case MapViewType.ROUTES:
-                mapInfo.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]}
-                setMarkers(Routes(mapInfo.routeProps))
+                mapInfo.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
+                setMarkers(Routes(mapInfo.routeProps));
+                break;
+            case MapViewType.HEAT:
+                mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137], [40.7605868, -111.8335]]};
+                setMapInfo(mapInfo);
+                setMarkers(<HeatmapLayer latlngs={mapInfo.heatmapProps.latlngs}/>);
                 break;
             case MapViewType.NONE:
                 break;

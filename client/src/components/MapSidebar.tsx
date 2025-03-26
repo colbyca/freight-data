@@ -4,6 +4,7 @@ export enum MapViewType {
     NONE = 0,
     STOPS = 1,
     ROUTES = 2,
+    HEAT = 3,
 }
 
 
@@ -24,6 +25,9 @@ export const MapSidebar = ({selectedMode, setSelectedMode} : SidebarProps) => {
             <SelectModeButton text={"Routes"}
                               disabled={selectedMode === MapViewType.ROUTES}
                               onclick={() => setSelectedMode(MapViewType.ROUTES)} />
+            <SelectModeButton text={"Heatmap"}
+                              disabled={selectedMode === MapViewType.HEAT}
+                              onclick={() => setSelectedMode(MapViewType.HEAT)} />
         </div>
     )
 }
