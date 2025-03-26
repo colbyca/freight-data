@@ -1,3 +1,6 @@
+// Adapted from code by 
+// https://github.com/LockBlock-dev/react-leaflet-heat-layer
+
 import {
     createElementObject,
     createLayerComponent,
