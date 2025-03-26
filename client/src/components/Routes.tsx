@@ -2,11 +2,21 @@ import { Polyline } from "react-leaflet"
 
 
 export interface RouteProps {
-    
+    routes: Route[]
 } 
 
-export const Routes = () => {
-    return [
-        <Polyline positions={[[41.74191, -111.81357], [40.978146, -111.887645], [37.1081894, -113.5812095]]}  />,
-    ]
+export class Route {
+    positions: Number[][]
+
+    constructor(positions: Number[][]) {
+        this.positions = positions;
+    }
+}
+
+export const Routes = (props: RouteProps) => {
+    return props.routes.map((route, index) => {
+        return (
+            <Polyline key={index} positions={route.positions} />
+        )
+    });
 }

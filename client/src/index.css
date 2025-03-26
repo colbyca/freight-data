@@ -50,6 +50,15 @@ body {
   align-items: center;
 }
 
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-container[data-hidden^="true"] {
+  height: fit-content;
+}
+
 .sidebar-container[data-hidden^="true"] > #map-sidebar {
   display: none;
 }
@@ -75,6 +84,7 @@ body {
   padding: 10px;
   margin: 5px;
   border: 1px solid darkgrey;
+  align-self: flex-end;
 }
 
 

@@ -1,8 +1,9 @@
 import React from "react";
 
 export enum MapViewType {
-    STOPS = 0,
-    ROUTES = 1,
+    NONE = 0,
+    STOPS = 1,
+    ROUTES = 2,
 }
 
 

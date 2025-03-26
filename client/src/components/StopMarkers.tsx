@@ -7,9 +7,9 @@ export interface StopMarkerProps {
 
 export const StopMarkers = ({markers} : StopMarkerProps) => {
     return (
-        markers!.map(marker => {
+        markers!.map((marker, index) => {
             return (
-                <CircleMarker center={[marker.latitude, marker.longitude]} pathOptions={{color: marker.color}}/>
+                <CircleMarker key={index} center={[marker.latitude, marker.longitude]} pathOptions={{color: marker.color}}/>
             )
         })
     )

@@ -3,8 +3,8 @@ import { StopMarkerProps, StopMarkers } from "../components/StopMarkers"
 import { JSX } from "react/jsx-runtime";
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
-import { useState } from "react";
-import { RouteProps, Routes } from "../components/Routes";
+import { ReactNode, useEffect, useState } from "react";
+import { RouteProps, Routes, Route } from "../components/Routes";
 import MarkerModel from "../Models/MarkerModel";
 
 interface MapInfo {
@@ -13,21 +13,29 @@ interface MapInfo {
 }
 
 export const VisualMap = () => {
-    const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.STOPS);
+    const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.NONE);
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     // We are likely going to use a useEffect hook to query the api for relevant map information
-    const [mapInfo, setMapInfo] = useState<MapInfo>();
+    const [mapInfo, setMapInfo] = useState<MapInfo>({stopMarkerProps: {markers: []}, routeProps: {}});
+    const [markers, setMarkers] = useState<ReactNode>([]);
 
-    let markers: JSX.Element[] = [];
-    
-    switch (selectedMode.valueOf()) {
-        case MapViewType.STOPS:
-            markers = StopMarkers({markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]});
-            break;
-        case MapViewType.ROUTES:
-            markers = Routes();
-            break;
-    }
+    useEffect(() => {
+        switch (selectedMode.valueOf()) {
+            case MapViewType.STOPS:
+                mapInfo.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
+                setMarkers(StopMarkers(mapInfo.stopMarkerProps));
+                break;
+            case MapViewType.ROUTES:
+                mapInfo.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]}
+                setMarkers(Routes(mapInfo.routeProps))
+                break;
+            case MapViewType.NONE:
+                break;
+        }
+        setMapInfo(mapInfo);
+    },[selectedMode]);
+
+
     
     return (
         <div id="super-container">
