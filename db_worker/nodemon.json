@@ -1,0 +1,11 @@
+{
+    "watch": [
+        "src/",
+        "."
+    ],
+    "ext": "py",
+    "exec": "python src/worker.py",
+    "watchOptions": {
+        "usePolling": true
+    }
+}

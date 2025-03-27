@@ -1,10 +1,9 @@
 {
     "watch": [
-        "app/",
+        "src/**/*.ts",
         "."
     ],
-    "ext": "py",
-    "exec": "poetry run python -m app",
+    "ext": "ts",
     "watchOptions": {
         "usePolling": true
     }

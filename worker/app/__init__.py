@@ -1,1 +1,0 @@
-print("app/__init__.py loaded")

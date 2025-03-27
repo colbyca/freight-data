@@ -170,3 +170,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# data files
+monthly_route_data/
+monthly_stop_data/

@@ -1,7 +1,7 @@
 {
-  "name": "Worker Container",
+  "name": "DB Worker Container",
   "dockerComposeFile": "../../docker-compose.yml",
-  "service": "worker",
+  "service": "db_worker",
   "workspaceFolder": "/app",
   "shutdownAction": "none"
 }
