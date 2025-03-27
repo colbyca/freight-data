@@ -1,6 +1,5 @@
-import { MapContainer, TileLayer, useMap } from "react-leaflet"
+import { MapContainer, TileLayer } from "react-leaflet"
 import { StopMarkerProps, StopMarkers } from "../components/StopMarkers"
-import { JSX } from "react/jsx-runtime";
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
 import { ReactNode, useEffect, useState } from "react";
@@ -32,9 +31,9 @@ export const VisualMap = () => {
                 setMarkers(Routes(mapInfo.routeProps));
                 break;
             case MapViewType.HEAT:
-                mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137], [40.7605868, -111.8335]]};
+                mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137,1], [40.7605868, -111.8335,1]]};
                 setMapInfo(mapInfo);
-                setMarkers(<HeatmapLayer latlngs={mapInfo.heatmapProps.latlngs}/>);
+                setMarkers(<HeatmapLayer latlngs={mapInfo.heatmapProps!.latlngs}/>);
                 break;
             case MapViewType.NONE:
                 break;
