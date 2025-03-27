@@ -1,5 +1,6 @@
 # Freight Stops Visualization and Analysis Software
 This initial setup of this app was taken from <a href="https://github.com/dittonjs/4610Spring25ClassExamples">Joseph Ditton's repo</a>. Thank you Professor Ditton!
+This initial setup of this app was taken from <a href="https://github.com/dittonjs/4610Spring25ClassExamples">Joseph Ditton's repo</a>. Thank you Professor Ditton!
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
 **Features**
