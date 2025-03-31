@@ -3,23 +3,22 @@ import { config } from 'dotenv';
 import http from 'http';
 import { Queue } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
+import queryRoutes from './src/routes/queries';
 
 const prisma = new PrismaClient()
-
 
 // load environment variables
 config();
 
 const app = express();
 
-// slightly modified version of the code we wrote in class.
-// we wrap the express app in a node http server so that we can
-// expose the server to socket.io later on.
 const server = http.createServer(app);
 const port = parseInt(process.env.PORT || '3000');
 
-// automatically parse json request bodies
 app.use(express.json());
+
+// API routes
+app.use('/api/queries', queryRoutes);
 
 // a simple middleware the redirects
 // to the asset server if the request
@@ -34,12 +33,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-type LetterPostBody = {
-  title: string
-}
-
-
 
 app.get('*', (req, res) => {
   res.send(`
@@ -66,8 +59,6 @@ app.get('*', (req, res) => {
     </html>
     `);
 });
-
-
 
 server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
