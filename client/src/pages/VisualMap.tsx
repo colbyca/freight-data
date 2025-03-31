@@ -33,12 +33,11 @@ export const VisualMap = () => {
             case MapViewType.HEAT:
                 mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137,1], [40.7605868, -111.8335,1]]};
                 setMapInfo(mapInfo);
-                setMarkers(<HeatmapLayer latlngs={mapInfo.heatmapProps!.latlngs}/>);
+                setMarkers(<HeatmapLayer minOpacity={0.5} latlngs={mapInfo.heatmapProps!.latlngs}/>);
                 break;
             case MapViewType.NONE:
                 break;
         }
-        setMapInfo(mapInfo);
     },[selectedMode]);
 
 
