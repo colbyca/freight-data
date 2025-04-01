@@ -3,8 +3,7 @@ import os
 import pika
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
-import datetime
-import decimal
+from handlers import RegularQueryHandler, HeatmapHandler
 
 load_dotenv()
 
@@ -14,6 +13,17 @@ class QueryWorker:
         self.channel = None
         self.engine = create_engine(os.getenv('DATABASE_URL'))
         self.queue_name = 'query_queue'
+        
+        # Initialize handlers with engine
+        self.handlers = {
+            'regular': RegularQueryHandler(),
+            'heatmap': HeatmapHandler()
+        }
+        
+        # Set engine for each handler
+        for handler in self.handlers.values():
+            handler.engine = self.engine
+            
         self.connect()
 
     def connect(self):
@@ -52,25 +62,19 @@ class QueryWorker:
             data = json.loads(body)
             job_id = data['jobId']
             query = data['query']
+            job_type = data.get('type', 'regular')
+            params = data.get('params', {})
 
             self.update_job_status(job_id, 'processing')
 
-            # execute the query and update the job status when completed
-            with self.engine.connect() as conn:
-                result = conn.execute(text(query))
-                rows = []
-                for row in result:
-                    processed_row = {}
-                    for key, value in row._mapping.items():
-                        if isinstance(value, decimal.Decimal):
-                            processed_row[key] = float(value)
-                        elif isinstance(value, (datetime.date, datetime.datetime)):
-                            processed_row[key] = value.isoformat()
-                        else:
-                            processed_row[key] = str(value) if value is not None else None
-                    rows.append(processed_row)
+            # Get the appropriate handler
+            handler = self.handlers.get(job_type)
+            if not handler:
+                raise ValueError(f"Unknown job type: {job_type}")
 
-            self.update_job_status(job_id, 'completed', result=rows)
+            # Execute the handler
+            result = handler.process(query, params)
+            self.update_job_status(job_id, 'completed', result=result)
 
         except Exception as e:
             print(f"Error processing query: {e}")

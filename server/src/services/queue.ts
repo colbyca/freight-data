@@ -4,6 +4,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const QUEUE_NAME = 'query_queue';
 
+interface QueryParams {
+    type?: string;
+    params?: Record<string, any>;
+}
+
 export class QueueService {
     private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
@@ -19,7 +24,7 @@ export class QueueService {
         }
     }
 
-    async submitQuery(query: string) {
+    async submitQuery(query: string, options?: QueryParams) {
         if (!this.channel) {
             throw new Error('Queue not connected');
         }
@@ -35,7 +40,9 @@ export class QueueService {
         // Send the job to the queue
         await this.channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify({
             jobId: queryJob.id,
-            query
+            query,
+            type: options?.type || 'regular',
+            params: options?.params || {}
         })));
 
         return queryJob;

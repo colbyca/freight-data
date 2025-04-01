@@ -11,6 +11,9 @@ RUN apk add --no-cache \
     npm \
     curl
 
+RUN apk add --no-cache build-base && \
+    apk add --no-cache python3-dev py3-numpy openblas-dev lapack-dev
+
 # Create and activate virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
