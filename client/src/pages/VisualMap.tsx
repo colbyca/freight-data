@@ -8,6 +8,7 @@ import MarkerModel from "../Models/MarkerModel";
 import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
 import { MapEventHandler } from "../components/MapEventHandler";
 import { LatLng, LatLngBounds } from "leaflet";
+import { LoadingElement } from "../components/LoadingElement";
 
 interface MapInfo {
     stopMarkerProps?: StopMarkerProps;
@@ -22,6 +23,7 @@ export const VisualMap = () => {
     const [mapInfo, setMapInfo] = useState<MapInfo>({heatmapProps: {latlngs: []}});
     const [markers, setMarkers] = useState<ReactNode>([]);
     const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(-90, 180), new LatLng(90, -180))); 
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         updateSelectedMode(selectedMode, mapInfo, bounds, setMapInfo, setMarkers);
@@ -30,17 +32,20 @@ export const VisualMap = () => {
     // useEffect(() => {
     //     updateBounds(selectedMode, mapInfo, bounds, setMapInfo, setMarkers)
     // }, [bounds]);
+
     
     return (
         <div id="super-container">
         <div className="layout-container">
-        <MapContainer center={[41, -112]} zoom={6} scrollWheelZoom={false}>
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {markers}
-            <MapEventHandler setBounds={setBounds}/>
-        </MapContainer>
+            {loading ?  <LoadingElement/> : (
+                <MapContainer center={[41, -112]} zoom={6} scrollWheelZoom={false}>
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {markers}
+                    <MapEventHandler setBounds={setBounds}/>
+                </MapContainer>
+            )}
         </div>
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <button type="button"
@@ -54,7 +59,7 @@ export const VisualMap = () => {
     )
 }
 
-const updateSelectedMode = (
+const updateSelectedMode = async (
     selectedMode: MapViewType,
     mapInfo: MapInfo,
     bounds: LatLngBounds,
@@ -72,9 +77,10 @@ const updateSelectedMode = (
                 setMarkers(Routes(mapInfo.routeProps));
                 break;
             case MapViewType.HEAT:
-                mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137,1], [40.7605868, -111.8335,1]]};
-                setMapInfo(mapInfo);
-                setMarkers(<HeatmapLayer minOpacity={0.5} latlngs={mapInfo.heatmapProps!.latlngs}/>);
+                // mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137,1], [40.7605868, -111.8335,1]]};
+                // setMapInfo(mapInfo);
+                // setMarkers(<HeatmapLayer minOpacity={0.5} latlngs={mapInfo.heatmapProps!.latlngs}/>);
+                await heatmapCall(new Date(2023, 0,1), new Date(2023,0,13));
                 break;
             case MapViewType.NONE:
                 break;
@@ -90,18 +96,39 @@ const updateBounds = async (
 ) => {
     switch (selectedMode.valueOf()) {
         case MapViewType.HEAT: {
-            await locationsCall(bounds);
+            
         }
     }
 }
 
-const  locationsCall = async (bounds: LatLngBounds) => await fetch("/api/queries/location", {
-    method: "POST",
-    body: JSON.stringify({
-        "month" : "January",
-        "north" : bounds.getNorth(),
-        "south" : bounds.getSouth(),
-        "east"  : bounds.getEast(),
-        "west"  : bounds.getWest(),
-    }),
-});
+const heatmapCall = async (startDate: Date, endDate: Date) => {
+    let heatmapResponse = await fetch(`/api/queries/heatmap`, {
+        method: "POST",
+        headers: [["Content-Type", "application/json"], ],
+        body: JSON.stringify({
+            month: startDate.getMonth() + 1,
+            eps: 0.001,
+            minSamples: 3,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+        })
+    });
+
+    let jobId: number = (await heatmapResponse.json())["jobId"];
+    let jobComplete = false;
+    let result;
+    while (!jobComplete) {
+        let jobStatusResponse = await fetch(`/api/queries/status/${jobId}`, {
+            headers: [['cache-control', 'no-cache']]
+        });
+
+        result = await jobStatusResponse.json();
+
+        if (result["completedAt"] != null) {
+            break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve,3000));
+    }
+    console.log(result)
+}

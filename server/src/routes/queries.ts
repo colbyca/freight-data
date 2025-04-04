@@ -163,7 +163,6 @@ router.post('/heatmap', async (req: Request, res: Response) => {
             WHERE start_time >= '${startDate}'
             AND end_time <= '${endDate}';
         `;
-
         // Submit the query to the queue with additional parameters
         const job = await queueService.submitQuery(query, {
             type: 'heatmap',
