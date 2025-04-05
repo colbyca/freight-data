@@ -2,7 +2,7 @@ import { MapContainer, TileLayer } from "react-leaflet"
 import { StopMarkerProps, StopMarkers } from "../components/StopMarkers"
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
-import { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { RouteProps, Routes, Route } from "../components/Routes";
 import MarkerModel from "../Models/MarkerModel";
 import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
@@ -20,13 +20,13 @@ export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.NONE);
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     // We are likely going to use a useEffect hook to query the api for relevant map information
-    const [mapInfo, setMapInfo] = useState<MapInfo>({heatmapProps: {latlngs: []}});
+    const mapInfo = useRef<MapInfo>({heatmapProps: {latlngs: []}});
     const [markers, setMarkers] = useState<ReactNode>([]);
     const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(-90, 180), new LatLng(90, -180))); 
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        updateSelectedMode(selectedMode, mapInfo, bounds, setMapInfo, setMarkers);
+        updateSelectedMode(selectedMode, mapInfo, bounds, setLoading, setMarkers);
     },[selectedMode]);
 
     // useEffect(() => {
@@ -61,30 +61,32 @@ export const VisualMap = () => {
 
 const updateSelectedMode = async (
     selectedMode: MapViewType,
-    mapInfo: MapInfo,
+    mapInfo: React.MutableRefObject<MapInfo>,
     bounds: LatLngBounds,
-    setMapInfo: React.Dispatch<React.SetStateAction<MapInfo>>,
+    setLoading: React.Dispatch<boolean>,
     setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
 ) => {
-
+        setLoading(true);
         switch (selectedMode.valueOf()) {
             case MapViewType.STOPS:
-                mapInfo.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
-                setMarkers(StopMarkers(mapInfo.stopMarkerProps))
+                mapInfo.current.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
+                setMarkers(StopMarkers(mapInfo.current.stopMarkerProps))
                 break;
             case MapViewType.ROUTES:
-                mapInfo.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
-                setMarkers(Routes(mapInfo.routeProps));
+                mapInfo.current.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
+                setMarkers(Routes(mapInfo.current.routeProps));
                 break;
             case MapViewType.HEAT:
-                // mapInfo.heatmapProps = {latlngs: [[41.742575, -111.81137,1], [40.7605868, -111.8335,1]]};
-                // setMapInfo(mapInfo);
-                // setMarkers(<HeatmapLayer minOpacity={0.5} latlngs={mapInfo.heatmapProps!.latlngs}/>);
-                await heatmapCall(new Date(2023, 0,1), new Date(2023,0,13));
+                let result = (await heatmapCall(new Date(2023, 0,1), new Date(2023,0,13))).result;
+                console.log(result);
+                mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
+                console.log(mapInfo.current.heatmapProps);
+                setMarkers(<HeatmapLayer minOpacity={0.07} max={result.max_intensity} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
                 break;
             case MapViewType.NONE:
                 break;
         }
+        setLoading(false);
 }
 
 const updateBounds = async (
@@ -130,5 +132,9 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
 
         await new Promise(resolve => setTimeout(resolve,3000));
     }
-    console.log(result)
+    result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map(item => {
+        return [item.latitude, item.longitude, item.count]
+    });
+
+    return result;
 }
