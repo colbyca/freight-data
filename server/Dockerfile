@@ -3,6 +3,7 @@ WORKDIR /app
 COPY ./package.json .
 COPY ./package-lock.json .
 RUN npm install
+RUN apk add --no-cache bash
 COPY . .
 
 EXPOSE 3000

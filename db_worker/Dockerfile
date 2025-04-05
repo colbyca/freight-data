@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     postgresql-client \
     nodejs \
     npm \
-    curl
+    curl \
+    bash
 
 RUN apk add --no-cache build-base && \
     apk add --no-cache python3-dev py3-numpy openblas-dev lapack-dev
