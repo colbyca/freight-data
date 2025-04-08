@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { QueueService } from '../services/queue';
-import { z } from 'zod';
+import { date, z } from 'zod';
 
 const router = express.Router();
 const queueService = new QueueService();
@@ -95,6 +95,7 @@ router.get('/status/:jobId', async (req: Request, res: Response) => {
         const job = await queueService.getQueryStatus(req.params.jobId);
         if (!job) {
             res.status(404).json({ error: 'Query job not found' });
+            return;
         }
         res.json(job);
     } catch (error) {
