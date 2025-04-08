@@ -117,6 +117,38 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
     });
 
     let jobId: number = (await heatmapResponse.json())["jobId"];
+    let result = await waitUntilResult(jobId);
+    
+    result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map(item => {
+        return [item.latitude, item.longitude, item.count]
+    });
+
+    return result;
+}
+
+// router.post('/to_utah', async (req: Request, res: Response) => {
+//     try {
+//         // Validate request body
+//         const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
+
+const toUtahCall = async (startDate: Date, endDate: Date) => {
+    let heatmapResponse = await fetch(`/api/queries/to_utah`, {
+        method: "POST",
+        headers: [["Content-Type", "application/json"], ],
+        body: JSON.stringify({
+            month: startDate.getMonth() + 1,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+        })
+    });
+    
+    let jobId: number = (await heatmapResponse.json())["jobId"];
+    let result = await waitUntilResult(jobId);
+
+    console.log(result);
+}
+
+const waitUntilResult = async(jobId: number) => {
     let jobComplete = false;
     let result;
     while (!jobComplete) {
@@ -127,14 +159,14 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
         result = await jobStatusResponse.json();
 
         if (result["completedAt"] != null) {
-            break;
+            return result
+        }
+
+        if (result["error"] != null) {
+            console.error(`Error for job ${jobId}: ${result["error"]}`);
+            return;
         }
 
         await new Promise(resolve => setTimeout(resolve,3000));
     }
-    result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map(item => {
-        return [item.latitude, item.longitude, item.count]
-    });
-
-    return result;
 }
