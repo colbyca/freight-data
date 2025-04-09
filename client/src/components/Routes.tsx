@@ -1,3 +1,4 @@
+import { LatLngTuple } from "leaflet";
 import { Polyline } from "react-leaflet"
 
 
@@ -6,9 +7,9 @@ export interface RouteProps {
 } 
 
 export class Route {
-    positions: Number[][]
+    positions: LatLngTuple[]
 
-    constructor(positions: Number[][]) {
+    constructor(positions: LatLngTuple[]) {
         this.positions = positions;
     }
 }

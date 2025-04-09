@@ -8,11 +8,11 @@ import {
     type LayerProps,
     type LeafletContextInterface,
 } from "@react-leaflet/core";
-import L, { LatLngTuple, LatLng } from "leaflet"
+import L, { HeatLatLngTuple, LatLng } from "leaflet"
 import "leaflet.heat";
 
 export interface HeatLayerProps extends LayerProps, L.HeatMapOptions {
-    latlngs: Array<LatLng | LatLngTuple>;
+    latlngs: Array<LatLng | HeatLatLngTuple>;
 }
 
 const createHeatLayer = (

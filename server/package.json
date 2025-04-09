@@ -16,12 +16,15 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.3.0",
+    "amqplib": "^0.10.3",
     "bullmq": "^5.40.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "ollama": "^0.5.12"
+    "ollama": "^0.5.12",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.4",
     "@types/express": "^5.0.0",
     "nodemon": "^3.1.9",
     "prisma": "^6.3.0",

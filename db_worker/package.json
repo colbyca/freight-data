@@ -1,0 +1,11 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "nodemon"
+  },
+  "dependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
