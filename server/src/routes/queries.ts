@@ -32,19 +32,18 @@ const heatmapQuerySchema = z.object({
 
 // Schema for validating the Utah boundary request
 const utahBoundarySchema = z.object({
-    month: z.number().min(1).max(12),
     startDate: z.string().datetime(),
-    endDate: z.string().datetime()
+    endDate: z.string().datetime(),
+    month: z.number().min(1).max(12),
 }).refine((data) => {
     // Check if the date range is within the specified month
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
-    const monthStart = new Date(start.getFullYear(), data.month - 1, 1);
-    const monthEnd = new Date(start.getFullYear(), data.month, 0);
-    return start >= monthStart && end <= monthEnd;
+    const monthsMatch = start.getMonth() === (data.month - 1);
+    return start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
 }, {
-    message: "Date range must be within the specified month",
-    path: ["startDate", "endDate"]
+    message: `Date range must be within the specified month`,
+    path: ["startDate", "endDate"],
 });
 
 // Initialize queue connection
@@ -253,9 +252,8 @@ router.post('/from_utah', async (req: Request, res: Response) => {
 router.post('/to_utah', async (req: Request, res: Response) => {
     try {
         // Validate request body
-        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
-
         // Query to get all points from trucks that start outside Utah and end inside
+        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
         const query = `
             WITH qualifying_trucks AS (
                 SELECT DISTINCT route_id
@@ -296,7 +294,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             res.status(400).json({
                 error: 'Invalid request format',
-                details: error.errors
+                details: error.errors,
             });
         } else {
             console.error('Error submitting to Utah query:', error);

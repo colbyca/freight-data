@@ -7,7 +7,7 @@ import { RouteProps, Routes, Route } from "../components/Routes";
 import MarkerModel from "../Models/MarkerModel";
 import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
 import { MapEventHandler } from "../components/MapEventHandler";
-import { LatLng, LatLngBounds } from "leaflet";
+import { LatLng, LatLngBounds, LatLngTuple } from "leaflet";
 import { LoadingElement } from "../components/LoadingElement";
 
 interface MapInfo {
@@ -67,21 +67,23 @@ const updateSelectedMode = async (
     setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
 ) => {
         setLoading(true);
+        let result;
         switch (selectedMode.valueOf()) {
             case MapViewType.STOPS:
                 mapInfo.current.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
                 setMarkers(StopMarkers(mapInfo.current.stopMarkerProps))
                 break;
             case MapViewType.ROUTES:
-                mapInfo.current.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
-                setMarkers(Routes(mapInfo.current.routeProps));
+                //mapInfo.current.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
+                //setMarkers(Routes(mapInfo.current.routeProps));
+                result = (await toUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
+                mapInfo.current.routeProps = {routes: result}
+                setMarkers(Routes(mapInfo.current.routeProps))
                 break;
             case MapViewType.HEAT:
-                let result = (await heatmapCall(new Date(2023, 0,1), new Date(2023,0,13))).result;
-                console.log(result);
+                result = (await heatmapCall(new Date(2023, 0,1), new Date(2023,0,31))).result;
                 mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
-                console.log(mapInfo.current.heatmapProps);
-                setMarkers(<HeatmapLayer minOpacity={0.07} max={result.max_intensity} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
+                setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
                 break;
             case MapViewType.NONE:
                 break;
@@ -132,7 +134,7 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
 //         const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
 
 const toUtahCall = async (startDate: Date, endDate: Date) => {
-    let heatmapResponse = await fetch(`/api/queries/to_utah`, {
+    let response = await fetch(`/api/queries/to_utah`, {
         method: "POST",
         headers: [["Content-Type", "application/json"], ],
         body: JSON.stringify({
@@ -142,10 +144,16 @@ const toUtahCall = async (startDate: Date, endDate: Date) => {
         })
     });
     
-    let jobId: number = (await heatmapResponse.json())["jobId"];
+    let jobId: number = (await response.json())["jobId"];
     let result = await waitUntilResult(jobId);
+    result.result = result.result.reduce(
+        (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id)||[],
+            [e.latitude, e.longitude]
+        ]),
+        new Map()
+    ).values().map((value: LatLngTuple[]) => new Route(value));
 
-    console.log(result);
+    return result;
 }
 
 const waitUntilResult = async(jobId: number) => {
