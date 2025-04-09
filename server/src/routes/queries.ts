@@ -40,7 +40,7 @@ const utahBoundarySchema = z.object({
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
     const monthsMatch = start.getMonth() === (data.month - 1);
-    return start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+    return start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear() && monthsMatch;
 }, {
     message: `Date range must be within the specified month`,
     path: ["startDate", "endDate"],
