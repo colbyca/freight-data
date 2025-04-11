@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-RUN apk add --no-cache \
+RUN apk add --no-cache --upgrade \
     postgresql-client \
     nodejs \
     npm \

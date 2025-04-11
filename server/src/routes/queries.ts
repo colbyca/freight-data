@@ -219,8 +219,14 @@ router.post('/from_utah', async (req: Request, res: Response) => {
                 r.timestamp,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % 3 = 1
             ORDER BY r.route_id, r.timestamp
             LIMIT 1000;
         `;
@@ -273,12 +279,19 @@ router.post('/to_utah', async (req: Request, res: Response) => {
             SELECT 
                 r.route_id,
                 r.timestamp,
+                r.truck_id,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % 5 = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT 100;
         `;
 
         const job = await queueService.submitQuery(query, {

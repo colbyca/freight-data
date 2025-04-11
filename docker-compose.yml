@@ -37,7 +37,6 @@ services:
       - db
       - cache
       - rabbitmq
-    entrypoint: ["bash", "-c", "/usr/local/bin/wait-for-it.sh rabbitmq:5672 --timeout=0 -- && npm run dev"]
 
   client:
     build:
@@ -64,20 +63,6 @@ services:
       - db
       - cache
       - rabbitmq
-    entrypoint: ["bash", "-c", "/usr/local/bin/wait-for-it.sh rabbitmq:5672 --timeout=0 -- && npm run dev"]
-
-  cache:
-    image: redis:latest
-    container_name: freight_cache
-    ports:
-      - "6379:6379"
-    volumes:
-      - cache:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
