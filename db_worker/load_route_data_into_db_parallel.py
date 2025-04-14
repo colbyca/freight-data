@@ -8,6 +8,28 @@ import argparse
 import tempfile
 import math
 
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate the great circle distance between two points on the earth"""
+    # Convert decimal degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    r = 3956  # Radius of earth in miles
+    return c * r
+
+def calculate_speed(lat1, lon1, lat2, lon2, time_diff_seconds):
+    """Calculate speed in miles per hour between two points"""
+    if time_diff_seconds <= 0:
+        return float('inf')
+    
+    distance = haversine_distance(lat1, lon1, lat2, lon2)
+    hours = time_diff_seconds / 3600
+    return distance / hours
+
 def split_file_into_chunks(file_path, num_chunks):
     """Split a large file into chunks at route boundaries and return temp file paths"""
     # First pass: count total lines and find ideal split points with route boundaries
@@ -45,9 +67,9 @@ def split_file_into_chunks(file_path, num_chunks):
                         timestamp = int(parts[3])
                         
                         if truck_id in last_timestamps:
-                            # Check if time gap is more than 1 day (86400 seconds)
+                            # Check if time gap is more than 6 hours (21600 seconds)
                             time_gap = timestamp - last_timestamps[truck_id]
-                            if time_gap > 86400:
+                            if time_gap > 21600:
                                 # Found a route boundary after the ideal split point
                                 actual_split_points.append(current_line)
                                 print(f"Split point {split_idx + 1}: Ideal={ideal_split_points[split_idx]:,}, Actual={current_line:,}")
@@ -135,10 +157,77 @@ def prepare_temp_files_for_copy(input_file, output_file, worker_id):
     """Process input file to create a COPY-compatible format with transformed data"""
     # Dictionary to keep track of last timestamp for each truck
     last_timestamps = {}
+    # Dictionary to keep track of last valid coordinates for each truck
+    last_coordinates = {}
     # Dictionary to keep track of current route ID for each truck
     current_route_ids = {}
+    # Dictionary to keep track of recent points for each truck
+    recent_points = {}  # Will store up to 5 recent points per truck
+    # Dictionary to track if we're in a stuck point sequence
+    stuck_points = {}  # Maps truck_id to (count, coordinates)
     # Global route counter for this worker
     route_counter = worker_id * 1000000  # Ensure unique route IDs across workers
+    
+    def is_point_stuck(current_point, recent_points_list):
+        """Check if a point is stuck at the same coordinates"""
+        if not recent_points_list:
+            return False
+            
+        # Check if current point is at same coordinates as previous points
+        current_coords = (current_point[0], current_point[1])
+        for prev_point in recent_points_list:
+            prev_coords = (prev_point[0], prev_point[1])
+            if abs(current_coords[0] - prev_coords[0]) > 0.0001 or abs(current_coords[1] - prev_coords[1]) > 0.0001:
+                return False
+        return True
+    
+    def is_point_valid(current_point, recent_points_list):
+        """Determine if a point is valid based on its relationship to recent points"""
+        if not recent_points_list:
+            return True  # First point is always included
+            
+        # Calculate speeds to all recent points
+        speeds = []
+        for prev_point in recent_points_list:
+            time_diff = current_point[2] - prev_point[2]
+            if time_diff <= 3600:  # Only consider points within 1 hour
+                speed = calculate_speed(prev_point[0], prev_point[1], 
+                                      current_point[0], current_point[1], 
+                                      time_diff)
+                speeds.append(speed)
+        
+        if not speeds:
+            return True  # No recent points within time window
+            
+        # If we have at least 2 recent points, use median speed
+        if len(speeds) >= 2:
+            median_speed = sorted(speeds)[len(speeds)//2]
+            return median_speed <= 200  # Filter if median speed is too high
+        
+        # If only one recent point, be more lenient
+        return speeds[0] <= 300  # Higher threshold for single point comparison
+    
+    def should_start_new_route(truck_id, current_point, last_point):
+        """Determine if we should start a new route based on time and distance"""
+        if not last_point:
+            return True
+            
+        time_diff = current_point[2] - last_point[2]
+        distance = haversine_distance(last_point[0], last_point[1], 
+                                    current_point[0], current_point[1])
+        
+        # Start new route if:
+        # 1. Time gap is more than 6 hours
+        # 2. OR if time gap is more than 1 hour AND distance is more than 100 miles
+        # 3. OR if we've been stuck at the same coordinates for 3 or more points
+        if time_diff > 21600:  # 6 hours
+            return True
+        elif time_diff > 3600 and distance > 100:  # 1 hour and 100 miles
+            return True
+        elif stuck_points.get(truck_id, (0, None))[0] >= 3:
+            return True
+            
+        return False
     
     with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
         for i, line in enumerate(infile):
@@ -146,21 +235,55 @@ def prepare_temp_files_for_copy(input_file, output_file, worker_id):
                 parts = line.strip().split(';')
                 if len(parts) >= 6:
                     truck_id = parts[0]
-                    latitude = parts[1]
-                    longitude = parts[2]
+                    latitude = float(parts[1])
+                    longitude = float(parts[2])
                     timestamp = int(parts[3])
                     speed = parts[4]
                     is_valid = parts[5] == '1'
                     
-                    # Check if we need to start a new route for this truck
-                    new_route = False
-                    if truck_id not in last_timestamps:
-                        new_route = True
+                    # Initialize data structures if needed
+                    if truck_id not in recent_points:
+                        recent_points[truck_id] = []
+                        stuck_points[truck_id] = (0, None)
+                    
+                    current_point = (latitude, longitude, timestamp)
+                    current_coords = (latitude, longitude)
+                    
+                    # Check if we're in a stuck point sequence
+                    is_stuck = is_point_stuck(current_point, recent_points[truck_id])
+                    if is_stuck:
+                        count, coords = stuck_points[truck_id]
+                        if coords == current_coords:
+                            stuck_points[truck_id] = (count + 1, coords)
+                        else:
+                            stuck_points[truck_id] = (1, current_coords)
                     else:
-                        # Check if time gap is more than 1 day (86400 seconds)
-                        time_gap = timestamp - last_timestamps[truck_id]
-                        if time_gap > 86400:
-                            new_route = True
+                        stuck_points[truck_id] = (0, None)
+                    
+                    # Get last valid point for this truck
+                    last_point = last_coordinates.get(truck_id)
+                    
+                    # Check if we need to start a new route
+                    new_route = should_start_new_route(truck_id, current_point, last_point)
+                    
+                    # Clear recent points when starting a new route
+                    if new_route:
+                        recent_points[truck_id] = []
+                        stuck_points[truck_id] = (0, None)
+                        if worker_id == 1 and i % 100000 == 0:
+                            print(f"Starting new route at {latitude}, {longitude}")
+                    
+                    # Check if point is valid
+                    should_include = is_point_valid(current_point, recent_points[truck_id])
+                    
+                    # Update recent points if this point is valid
+                    if should_include:
+                        recent_points[truck_id].append(current_point)
+                        # Keep only the 5 most recent points
+                        if len(recent_points[truck_id]) > 5:
+                            recent_points[truck_id].pop(0)
+                        # Update last valid coordinates
+                        last_coordinates[truck_id] = current_point
                     
                     # Assign or increment route ID
                     if new_route:
@@ -173,14 +296,18 @@ def prepare_temp_files_for_copy(input_file, output_file, worker_id):
                     # Get current route ID for this truck
                     route_id = current_route_ids.get(truck_id, route_counter)
                     
-                    # Create a tab-separated line ready for COPY
-                    # Format: truck_id, WKT point, timestamp, speed, is_valid, collection_date, route_id
-                    wkt_point = f"SRID=4326;POINT({longitude} {latitude})"
-                    collection_date = datetime.fromtimestamp(timestamp).date()
-                    
-                    outfile.write(f"{truck_id},{wkt_point},{timestamp},{speed},{is_valid},{collection_date},{route_id}\n")
-                    if i % 100000 == 0 and worker_id == 1:
-                        print(f"Processed {i} lines...")
+                    # Only write the point if it passed our filters
+                    if should_include:
+                        # Create a tab-separated line ready for COPY
+                        # Format: truck_id, WKT point, timestamp, speed, is_valid, collection_date, route_id
+                        wkt_point = f"SRID=4326;POINT({longitude} {latitude})"
+                        collection_date = datetime.fromtimestamp(timestamp).date()
+                        
+                        outfile.write(f"{truck_id},{wkt_point},{timestamp},{speed},{is_valid},{collection_date},{route_id}\n")
+                        if i % 100000 == 0 and worker_id == 1:
+                            print(f"Processed {i} lines...")
+                    elif worker_id == 1 and i % 100000 == 0:
+                        print(f"Filtered point at {latitude}, {longitude}")
 
             except Exception as e:
                 print(f"Error processing line: {line.strip()}, Error: {str(e)}")

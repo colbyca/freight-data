@@ -4,7 +4,6 @@ volumes:
   db_worker_node_modules:
   db_worker_python_packages:
   db_data:
-  cache:
 services:
   db:
     image: postgis/postgis:latest
@@ -35,7 +34,6 @@ services:
       - ./server/.env
     depends_on:
       - db
-      - cache
       - rabbitmq
 
   client:
@@ -61,7 +59,6 @@ services:
       - ./db_worker/.env
     depends_on:
       - db
-      - cache
       - rabbitmq
 
   rabbitmq:

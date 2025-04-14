@@ -291,7 +291,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
             ) r
             WHERE r.row_num % 5 = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 100;
+            LIMIT 10000;
         `;
 
         const job = await queueService.submitQuery(query, {
